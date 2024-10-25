@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "d:/Northeastern/Sophomore/Fall Semester/EECE 2560 Fundamentals of Engineering Algorithms/Programming Assignments/Final Project",
+      "program": "d:/Northeastern/Sophomore/Fall Semester/EECE 2560 Fundamentals of Engineering Algorithms/Programming Assignments/Final Project/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
-Snell Library,Theft
-Davenport A,Fire Alarm
-Stetson West,Suspicious Behaviour
-Curry,Choking
-Stetson West,Temp
-Snell Engineering,Temp
+Location,Emergency,Stationed Zone
+Snell Library,Theft,1
+Davenport A,Fire Alarm,2
+Stetson West,Suspicious Behaviour,2
+Curry,Choking,3
+Stetson West,Temp,1
+Snell Engineering,Temp,4

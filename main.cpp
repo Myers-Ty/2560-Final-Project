@@ -14,7 +14,8 @@ class NortheasternEmergency
     private:
         static std::string apiKey;
         std::vector<std::string> NUPDLocations;
-
+        int PastEmergencies[5] = {0,0,0,0,0}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
+        int OfficersAllocated[5] = {1,1,1,1,1}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
         // Used to encode the overivew polyline
         std::string urlEncode(const std::string &value) 
         {
@@ -114,9 +115,37 @@ class NortheasternEmergency
             return size * nmemb;
         }
         
-        void DynamicOfficerAllocation()
+        void DynamicOfficerAllocation(int numOfficers)
         {
-
+            /* Zone 1 ~ Columbus Place
+               Zone 2 ~ Behrakis
+               Zone 3 ~ Curry
+               Zone 4 ~ Marino
+               Zone 5 ~ Ruggles
+            */
+            numOfficers = numOfficers - 5; // Fair to assume at least 5 officers are always on duty due to size of our university so one officer is assigned per zone
+            while (numOfficers > 0)
+            {
+                int i = 1;
+                int worstZone = 0;
+                while (PastEmergencies[worstZone] == 0) // prevent divide by 0
+                {
+                    worstZone++;
+                }
+                while (i < 5)
+                {
+                    if (PastEmergencies[i] != 0) // prevent divide by 0
+                    {
+                        if (OfficersAllocated[i]/PastEmergencies[i] < OfficersAllocated[worstZone]/PastEmergencies[worstZone])
+                        {
+                            worstZone = i;
+                        }
+                    }
+                    i++;
+                }
+                OfficersAllocated[worstZone]++;
+                numOfficers--;
+            }
         }
 
         void ParseCSV(std::string PathToCSV)
@@ -124,14 +153,19 @@ class NortheasternEmergency
             std::ifstream file(PathToCSV); 
             
             if (file.is_open()) {
-                std::string Location;
-                std::string Emergency;
-                while (getline(file, Location, ',')) 
-                {
-                    std::cout << "Location:" << Location << std::endl ; 
+                std::string parse;
 
-                    getline(file, Emergency);
-                    std::cout << "Emergency:" << Emergency << std::endl  ; 
+                getline(file, parse); // skips first line of titles
+
+                while (getline(file, parse, ',')) 
+                {
+                    // std::cout << "Location:" << parse << " | "; 
+
+                    getline(file, parse, ',');
+                    // std::cout << "Emergency:" << parse << " | "  ;
+
+                    getline(file, parse);
+                    PastEmergencies[stoi(parse)-1]++;
 
                     // getline(file, Equipment, ','); // can just add rest of getline commands right inside this loop
                 }
@@ -142,10 +176,10 @@ class NortheasternEmergency
         }
 
     public:
-    NortheasternEmergency(std::string PathToCSV)
+    NortheasternEmergency(std::string PathToCSV, int numOfficers)
     {
         ParseCSV(PathToCSV);
-        DynamicOfficerAllocation();
+        DynamicOfficerAllocation(numOfficers);
     }
 
     void ShortestPath(std::string origin, std::string destination)
@@ -198,7 +232,7 @@ std::string NortheasternEmergency::apiKey = "AIzaSyAVzi2oft7sKVPwi75u-gat3_uk-cw
 int main()
 {
     // Replace path with path to your .csv file
-    NortheasternEmergency emerg("PastEmergencies.csv");
+    NortheasternEmergency emerg("PastEmergencies.csv", 35);
     /*
     while (true)
     {

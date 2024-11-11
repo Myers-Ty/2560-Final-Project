@@ -1,4 +1,3 @@
-// Compile program with g++ Main.cpp -o EmergResponse -I/usr/local/opt/curl/include -L/usr/local/opt/curl/lib -lcurl  `pkg-config --cflags --libs opencv4`
 #include <iostream>
 #include <curl/curl.h> // Used for Map generation : Used Ubuntu to install cURL
 #include <fstream>
@@ -7,12 +6,15 @@
 #include <opencv2/core/core.hpp> // Install with Ubuntu
 #include <opencv2/highgui/highgui.hpp>  // Install with Ubuntu  
 #include <nlohmann/json.hpp> // Install with Ubuntu
+#include <vector>
+#include <fstream>
 
 class NortheasternEmergency
 {
     private:
         static std::string apiKey;
-        
+        std::vector<std::string> NUPDLocations;
+
         // Used to encode the overivew polyline
         std::string urlEncode(const std::string &value) 
         {
@@ -60,7 +62,7 @@ class NortheasternEmergency
                 curl_easy_cleanup(curlPoly);
                 // Parse the JSON response to extract the polyline
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferPoly);
-                std::cout << readBufferPoly << std::endl;
+                // std::cout << readBufferPoly << std::endl; // Used for DEBUGGING
                 if (!jsonResponse["routes"].empty()) {
                     polyline = jsonResponse["routes"][0]["overview_polyline"]["points"].get<std::string>();
                     std::cout << "polyline found" << std::endl; // Used for DEBUGGING
@@ -95,6 +97,7 @@ class NortheasternEmergency
                 curl_easy_cleanup(curlURL);
                 // Parse the JSON response to extract the polyline
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferURL);
+                std::cout << readBufferURL << std::endl; // Used for Debugging
                 if (!jsonResponse["predictions"].empty()) {
                     PlaceID = jsonResponse["predictions"][0]["description"].get<std::string>();
                 } else {
@@ -111,10 +114,38 @@ class NortheasternEmergency
             return size * nmemb;
         }
         
-    public:
-    NortheasternEmergency()
-    {
+        void DynamicOfficerAllocation()
+        {
 
+        }
+
+        void ParseCSV(std::string PathToCSV)
+        {
+            std::ifstream file(PathToCSV); 
+            
+            if (file.is_open()) {
+                std::string Location;
+                std::string Emergency;
+                while (getline(file, Location, ',')) 
+                {
+                    std::cout << "Location:" << Location << std::endl ; 
+
+                    getline(file, Emergency);
+                    std::cout << "Emergency:" << Emergency << std::endl  ; 
+
+                    // getline(file, Equipment, ','); // can just add rest of getline commands right inside this loop
+                }
+            }
+            else {
+                std::cout << "File failed to open" << std::endl;
+            }
+        }
+
+    public:
+    NortheasternEmergency(std::string PathToCSV)
+    {
+        ParseCSV(PathToCSV);
+        DynamicOfficerAllocation();
     }
 
     void ShortestPath(std::string origin, std::string destination)
@@ -125,7 +156,7 @@ class NortheasternEmergency
 
         origin = autocompleteAddress(origin);
         destination = autocompleteAddress(destination);
-        std::cout << getPolyLine(origin, destination) << std::endl;
+        // std::cout << getPolyLine(origin, destination) << std::endl; // Used for Debugging
         std::string url = "https://maps.googleapis.com/maps/api/staticmap?"
                     "size=600x600"
                     "&markers=color:blue%7Clabel:S%7C" + origin + // Add NEU to address for accuracy
@@ -134,7 +165,7 @@ class NortheasternEmergency
                     "&maptype=satellite" // Change map type to satellite
                     //"&zoom=17" // Adjust zoom level to focus on the path
                     "&key=" + this->apiKey;
-        std::cout << url << std::endl; //Used for DEBUGGING
+        // std::cout << url << std::endl; //Used for DEBUGGING
         CURL* curl;
         CURLcode res;
         std::string readBuffer;
@@ -146,7 +177,6 @@ class NortheasternEmergency
             res = curl_easy_perform(curl);
             curl_easy_cleanup(curl);
         }
-
         // Save the image to a file
         std::ofstream outFile("route_map.png", std::ios::binary);
         outFile.write(readBuffer.c_str(), readBuffer.size());
@@ -159,6 +189,7 @@ class NortheasternEmergency
         cv::destroyWindow(windowName); //destroy the created window
     }
 
+    
    
 };
 
@@ -166,14 +197,20 @@ std::string NortheasternEmergency::apiKey = "AIzaSyAVzi2oft7sKVPwi75u-gat3_uk-cw
 
 int main()
 {
-    NortheasternEmergency emerg;
+    // Replace path with path to your .csv file
+    NortheasternEmergency emerg("PastEmergencies.csv");
+    /*
     while (true)
     {
         std::string location;
-        std::cout << "Enter the destination: ";
+        std::string location2;
+        std::cout << "Enter the origin: ";
         std::getline(std::cin, location);
-        emerg.ShortestPath("Ell Hall", location);
+        std::cout << "Enter the destination: ";
+        std::getline(std::cin, location2);
+        emerg.ShortestPath(location, location2);
     }
     emerg.ShortestPath("Ell Hall", "Snell Library");
+    */
     return 0;
 }

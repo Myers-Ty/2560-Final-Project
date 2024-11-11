@@ -202,9 +202,10 @@ class NortheasternEmergency
         void ParseOfficersCSV(std::string PathToOfficersCSV)
         {
             std::ifstream file(PathToOfficersCSV);
-            std::string line;
             if (file.is_open())
             {
+                std::string line;
+                
                 while (getline(file, line))
                 {
                     std::stringstream ss(line);

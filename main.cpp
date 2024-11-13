@@ -14,7 +14,7 @@ class NortheasternEmergency
     private:
         static std::string apiKey;
         std::vector<std::string> NUPDLocations;
-        int PastEmergencies[5] = {0,0,0,0,0}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
+        int PastEmergencies[4] = {0,0,0,0}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
         int OfficersAllocated[5] = {1,1,1,1,1}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
         // Used to encode the overivew polyline
         std::string urlEncode(const std::string &value) 
@@ -117,13 +117,15 @@ class NortheasternEmergency
         
         void DynamicOfficerAllocation(int numOfficers)
         {
-            /* Zone 1 ~ Columbus Place
-               Zone 2 ~ Behrakis
-               Zone 3 ~ Curry
-               Zone 4 ~ Marino
-               Zone 5 ~ Ruggles
+
+            /* The first location is where the officers are stationed
+               The second location is the AED zone the station point is based upon
+               Zone 1 ~ Columbus Place (Columbus South Sector)
+               Zone 2 ~ Behrakis (West Campus Sector)
+               Zone 3 ~ Curry (Academics Sector)
+               Zone 4 ~ Marino (East Fenway Sector)
             */
-            numOfficers = numOfficers - 5; // Fair to assume at least 5 officers are always on duty due to size of our university so one officer is assigned per zone
+            numOfficers = numOfficers - 4; // Fair to assume at least 4 officers are always on duty due to size of our university so one officer is assigned per zone
             while (numOfficers > 0)
             {
                 int i = 1;
@@ -132,7 +134,7 @@ class NortheasternEmergency
                 {
                     worstZone++;
                 }
-                while (i < 5)
+                while (i < 4)
                 {
                     if (PastEmergencies[i] != 0) // prevent divide by 0
                     {

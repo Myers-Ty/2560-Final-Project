@@ -14,7 +14,8 @@ class NortheasternEmergency
     private:
         static std::string apiKey;
         std::vector<std::string> NUPDLocations;
-
+        int PastEmergencies[4] = {0,0,0,0}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
+        int OfficersAllocated[5] = {1,1,1,1,1}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
         // Used to encode the overivew polyline
         std::string urlEncode(const std::string &value) 
         {
@@ -178,6 +179,7 @@ class NortheasternEmergency
                 // Parse the JSON response to extract the polyline
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferURL);
                 std::cout << readBufferURL << std::endl; // Used for Debugging
+                std::cout << readBufferURL << std::endl; // Used for Debugging
                 if (!jsonResponse["predictions"].empty()) {
                     PlaceID = jsonResponse["predictions"][0]["description"].get<std::string>();
                 } else {
@@ -190,15 +192,73 @@ class NortheasternEmergency
         }
 
         static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+        static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
             ((std::string*)userp)->append((char*)contents, size * nmemb);
             return size * nmemb;
         }
         
-        void DynamicOfficerAllocation()
+        void DynamicOfficerAllocation(int numOfficers)
         {
 
+            /* The first location is where the officers are stationed
+               The second location is the AED zone the station point is based upon
+               Zone 1 ~ Columbus Place (Columbus South Sector)
+               Zone 2 ~ Behrakis (West Campus Sector)
+               Zone 3 ~ Curry (Academics Sector)
+               Zone 4 ~ Marino (East Fenway Sector)
+            */
+            numOfficers = numOfficers - 4; // Fair to assume at least 4 officers are always on duty due to size of our university so one officer is assigned per zone
+            while (numOfficers > 0)
+            {
+                int i = 1;
+                int worstZone = 0;
+                while (PastEmergencies[worstZone] == 0) // prevent divide by 0
+                {
+                    worstZone++;
+                }
+                while (i < 4)
+                {
+                    if (PastEmergencies[i] != 0) // prevent divide by 0
+                    {
+                        if (OfficersAllocated[i]/PastEmergencies[i] < OfficersAllocated[worstZone]/PastEmergencies[worstZone])
+                        {
+                            worstZone = i;
+                        }
+                    }
+                    i++;
+                }
+                OfficersAllocated[worstZone]++;
+                numOfficers--;
+            }
         }
 
+        void ParseCSV(std::string PathToCSV)
+        {
+            std::ifstream file(PathToCSV); 
+            
+            if (file.is_open()) {
+                std::string parse;
+
+                getline(file, parse); // skips first line of titles
+
+                while (getline(file, parse, ',')) 
+                {
+                    // std::cout << "Location:" << parse << " | "; 
+
+                    getline(file, parse, ',');
+                    // std::cout << "Emergency:" << parse << " | "  ;
+
+                    getline(file, parse);
+                    PastEmergencies[stoi(parse)-1]++;
+
+                    // getline(file, Equipment, ','); // can just add rest of getline commands right inside this loop
+                }
+            }
+            else {
+                std::cout << "File failed to open" << std::endl;
+            }
+        }
+        
         void ParseOfficersCSV(std::string PathToOfficersCSV)
         {
             std::ifstream file(PathToOfficersCSV);
@@ -238,35 +298,12 @@ class NortheasternEmergency
             {
                 std::cout << "File failed to open" << std::endl;
             }
-        }
-        void ParseCSV(std::string PathToCSV)
-        {
-            std::ifstream file(PathToCSV); 
-            
-            if (file.is_open()) {
-                std::string Location;
-                std::string Emergency;
-                while (getline(file, Location, ',')) 
-                {
-                    std::cout << "Location:" << Location << std::endl ; 
-
-                    getline(file, Emergency);
-                    std::cout << "Emergency:" << Emergency << std::endl  ; 
-
-                    // getline(file, Equipment, ','); // can just add rest of getline commands right inside this loop
-                }
-            }
-            else {
-                std::cout << "File failed to open" << std::endl;
-            }
-        }
 
     public:
-    NortheasternEmergency(std::string PathToCSV, std::string PathToOfficersCSV)
+    NortheasternEmergency(std::string PathToCSV, int numOfficers)
     {
         ParseCSV(PathToCSV);
-        ParseOfficersCSV(PathToOfficersCSV);
-        DynamicOfficerAllocation();
+        DynamicOfficerAllocation(numOfficers);
     }
 
     void ShortestPath(std::string origin, std::string destination)

@@ -1,3 +1,11 @@
+/**
+  ******************************************************************************
+  * @file           : main.cpp
+  * @brief          : Main program inclduing NortheasternEmergency class
+  ******************************************************************************
+  *
+  ******************************************************************************
+  */
 #include <iostream>
 #include <curl/curl.h> // Used for Map generation : Used Ubuntu to install cURL
 #include <fstream>
@@ -13,21 +21,45 @@
 class NortheasternEmergency
 {
     private:
+        /**
+         * @brief gives permission to access Google API
+         */
         static std::string apiKey;
-        std::vector<std::string> NUPDLocations;
-        int PastEmergencies[4] = {0,0,0,0}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
-        int OfficersAllocated[5] = {1,1,1,1,1}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
 
-        // Officer structure
+        /**
+         * @brief each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
+         */
+        int PastEmergencies[4] = {0,0,0,0};
+
+        /**
+         * @brief each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
+         */
+        int OfficersAllocated[5] = {1,1,1,1,1};
+
+        /**
+         * @brief Officer structure that makes up every officer on campus
+         * @param ID: officer's badge #
+         * @param location: point where officer is dynamically allocated to stay
+         * @param isAvailable: true = currently at location && false = currently on response to emergency
+         */
         struct Officer
         {
             std::string ID;
             std::string location;
             bool isAvailable;
         };
+
+        /**
+         * @brief vector containg all officers on duty
+         */
         std::vector<Officer> officers;
 
-        // Equipment structure
+       /**
+        * @brief Equipment structure that makes up every equipment available on campus
+        * @param name: equipments' offical reference name
+        * @param weight: how much it weighs limits the 0-1 Knapsack
+        * @param importance: determines what choice to make for the 0-1 Knapsack
+        */
         struct Equipment
         {
             std::string name;
@@ -35,14 +67,23 @@ class NortheasternEmergency
             int importance;
         };
 
-        // Unordered map of emergency and requisite equipment
+        /**
+         * @brief Emergency map that assigns names and equipment rankings to each emergency
+         * @param string: name of emergency type
+         * @param vector<Equipment>: equipment relevant to emergency
+         */
         std::unordered_map<std::string, std::vector<Equipment>> crimeEquipment =
         {
             {"fire alarm", {{"taser", 2, 0}, {"pepper spray", 1, 0}, {"fire extinguisher", 5, 6}, {"fire axe", 8, 5}}},
             {"fighting", {{"taser", 2, 8}, {"pepper spray", 1, 5}, {"fire extinguisher", 5, 0}, {"fire axe", 8, 0}}}
         };
 
-        // method to solve 01 knapsack problem and choose optimal eq.
+        /**
+         * @brief 0-1 Knapsack problem solver
+         * @param items: vector of equipment importances and inventory relevant to emergency
+         * @param maxWeight: how much officer can carry based on their strength
+         * @retval vector<string>
+         */
         std::vector<std::string> solveKnapsack(const std::vector<Equipment> &items, int maxWeight)
         {
             int n = items.size();
@@ -79,7 +120,11 @@ class NortheasternEmergency
             return chosenItems;
         }
 
-        // Used to encode the overivew polyline
+        /** 
+         * @brief Used to encode the overview polyline
+         * @param value: raw polyline aqcuired from API
+         * @retval string
+         */
         std::string urlEncode(const std::string &value) 
         {
             std::ostringstream escaped;
@@ -98,7 +143,12 @@ class NortheasternEmergency
             return escaped.str();
         }
         
-        // Used to acquire the overivew polyline
+        /** 
+         *  @brief Used to acquire the overivew polyline
+         *  @param origin: where the polyline will start
+         *  @param destination: where the polyline will route to
+         *  @retval string
+         */
         std::string getPolyLine(std::string origin, std::string destination)
         {
             // Construct the URL for the Directions API
@@ -137,6 +187,12 @@ class NortheasternEmergency
             return urlEncode(polyline);
         }
 
+        /** 
+         *  @brief Used to get the length of polyline
+         *  @param origin: where the polyline will start
+         *  @param destination: where the polyline will route to
+         *  @retval double
+         */
         double getPolyLineDistance(std::string origin, std::string destination)
         {
             // Construct the URL for the Directions API
@@ -179,7 +235,12 @@ class NortheasternEmergency
             return distance;
         }
 
-        void DeployOfficer(std::string emergencyLocation, std::vector<Officer> officers)
+         /** 
+         *  @brief Used to determine the officer closest to the emergency
+         *  @param emergencyLocation: where the emergency occurs
+         *  @retval None
+         */
+        void DeployOfficer(std::string emergencyLocation)
         {
             double shortestPath = std::numeric_limits<double>::max();
             Officer* nearestOfficer = nullptr;
@@ -209,6 +270,12 @@ class NortheasternEmergency
                 std::cout<<"No available officers to deploy!"<<std::endl;
             }
         }  
+        
+        /** 
+         *  @brief Used for QOL for user, allowing Google API to guess the address
+         *  @param location: incomplete address input by user
+         *  @retval string
+         */
         std::string autocompleteAddress(std::string location)
         {
             // Construct the URL for the Directions API
@@ -246,11 +313,20 @@ class NortheasternEmergency
             return PlaceID;
         }
 
+        /** 
+         * @brief Used by curl to help format Google API query
+         * @retval size_t
+         */
         static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
             ((std::string*)userp)->append((char*)contents, size * nmemb);
             return size * nmemb;
         }
         
+        /**
+         * @brief allocates officers to locations across campus based upon past emergency data
+         * @param numOfficers: how many officers are currently on duty
+         * @retval None 
+         */
         void DynamicOfficerAllocation(int numOfficers)
         {
 
@@ -286,6 +362,11 @@ class NortheasternEmergency
             }
         }
 
+        /**
+         * @brief takes in a CSV file and parses data into usable format by the class
+         * @param PathToCSV: string file path to CSV location
+         * @retval None
+         */
         void ParseCSV(std::string PathToCSV)
         {
             std::ifstream file(PathToCSV); 
@@ -314,6 +395,11 @@ class NortheasternEmergency
             }
         }
         
+        /**
+         * @brief takes in a CSV file and parses data into usable format by the class
+         * @param PathToOfficersCSV: string file path to CSV location
+         * @retval None
+         */
         void ParseOfficersCSV(std::string PathToOfficersCSV)
         {
             std::ifstream file(PathToOfficersCSV);
@@ -356,74 +442,95 @@ class NortheasternEmergency
         }
 
     public:
-    NortheasternEmergency(std::string PathToCSV, int numOfficers)
-    {
-        ParseCSV(PathToCSV);
-        DynamicOfficerAllocation(numOfficers);
-    }
-
-    void DeployOfficerAndEquipment(std::string location, std::string emergencyType)
-    {
-        std::cout<<"Emergency at: "<<location<<std::endl;
-        DeployOfficer(location, officers);
-
-        std::vector<Equipment> equipmentNeeded = crimeEquipment[emergencyType];
-        std::vector<std::string> optimalEquipment = solveKnapsack(equipmentNeeded, 15);
-
-        std::cout<<"Optimal equipment for "<<emergencyType<<std::endl;
-        for (const auto &item :optimalEquipment)
+        /**
+         * @brief Construct a new Northeastern Emergency object
+         * @param PathToCSV: string file path to past emergency data
+         * @param numOfficers: how many officers are currently on duty
+         */
+        NortheasternEmergency(std::string PathToCSV, int numOfficers)
         {
-            std::cout<<item<<std::endl;
+            ParseCSV(PathToCSV);
+            DynamicOfficerAllocation(numOfficers);
         }
-    }
 
-    void ShortestPath(std::string origin, std::string destination)
-    {
-        // Format the origin and destination to match Google's API Format
-        std::replace(origin.begin(), origin.end(), ' ', '+'); // replace all ' ' to '+'
-        std::replace(destination.begin(), destination.end(), ' ', '+'); // replace all ' ' to '+'
+        /**
+         * @brief chooses the best officer and equipment allocation based upon the emergency
+         * @param location: where the emergency is
+         * @param emergencyType: type emergency falls under
+         * @retval None
+         */
+        void DeployOfficerAndEquipment(std::string location, std::string emergencyType)
+        {
+            std::cout<<"Emergency at: "<<location<<std::endl;
+            DeployOfficer(location);
 
-        origin = autocompleteAddress(origin);
-        destination = autocompleteAddress(destination);
-        // std::cout << getPolyLine(origin, destination) << std::endl; // Used for Debugging
-        std::string url = "https://maps.googleapis.com/maps/api/staticmap?"
-                    "size=600x600"
-                    "&markers=color:blue%7Clabel:S%7C" + origin + // Add NEU to address for accuracy
-                    "&markers=color:red%7Clabel:D%7C" + destination + // Add NEU to address for accuracy
-                    "&path=enc:" + getPolyLine(origin, destination) + // Shows actual path for officers to take
-                    "&maptype=satellite" // Change map type to satellite
-                    //"&zoom=17" // Adjust zoom level to focus on the path
-                    "&key=" + this->apiKey;
-        // std::cout << url << std::endl; //Used for DEBUGGING
-        CURL* curl;
-        CURLcode res;
-        std::string readBuffer;
-        curl = curl_easy_init();
-        if(curl) {
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-            res = curl_easy_perform(curl);
-            curl_easy_cleanup(curl);
+            std::vector<Equipment> equipmentNeeded = crimeEquipment[emergencyType];
+            std::vector<std::string> optimalEquipment = solveKnapsack(equipmentNeeded, 15);
+
+            std::cout<<"Optimal equipment for "<<emergencyType<<std::endl;
+            for (const auto &item :optimalEquipment)
+            {
+                std::cout<<item<<std::endl;
+            }
         }
-        // Save the image to a file
-        std::ofstream outFile("route_map.png", std::ios::binary);
-        outFile.write(readBuffer.c_str(), readBuffer.size());
-        outFile.close();
-        cv::Mat image= cv::imread("route_map.png");   
-        std::string windowName = "Emergency Route"; //Name of the window
-        cv::namedWindow(windowName); // Create a window
-        cv::imshow(windowName, image); // Show our image inside the created window.
-        cv::waitKey(0); // Wait for any keystroke in the window
-        cv::destroyWindow(windowName); //destroy the created window
-    }
 
-    
-   
+        /**
+         * @brief finds the shortest path that uses roads and sidewalks, not just a straight line
+         * @param origin: where the officer on call is located
+         * @param destination: where the emergency they are responding to is
+         * @retval None
+         */
+        void ShortestPath(std::string origin, std::string destination)
+        {
+            // Format the origin and destination to match Google's API Format
+            std::replace(origin.begin(), origin.end(), ' ', '+'); // replace all ' ' to '+'
+            std::replace(destination.begin(), destination.end(), ' ', '+'); // replace all ' ' to '+'
+
+            origin = autocompleteAddress(origin);
+            destination = autocompleteAddress(destination);
+            // std::cout << getPolyLine(origin, destination) << std::endl; // Used for Debugging
+            std::string url = "https://maps.googleapis.com/maps/api/staticmap?"
+                        "size=600x600"
+                        "&markers=color:blue%7Clabel:S%7C" + origin + // Add NEU to address for accuracy
+                        "&markers=color:red%7Clabel:D%7C" + destination + // Add NEU to address for accuracy
+                        "&path=enc:" + getPolyLine(origin, destination) + // Shows actual path for officers to take
+                        "&maptype=satellite" // Change map type to satellite
+                        //"&zoom=17" // Adjust zoom level to focus on the path
+                        "&key=" + this->apiKey;
+            // std::cout << url << std::endl; //Used for DEBUGGING
+            CURL* curl;
+            CURLcode res;
+            std::string readBuffer;
+            curl = curl_easy_init();
+            if(curl) {
+                curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+                curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+                res = curl_easy_perform(curl);
+                curl_easy_cleanup(curl);
+            }
+            // Save the image to a file
+            std::ofstream outFile("route_map.png", std::ios::binary);
+            outFile.write(readBuffer.c_str(), readBuffer.size());
+            outFile.close();
+            cv::Mat image= cv::imread("route_map.png");   
+            std::string windowName = "Emergency Route"; //Name of the window
+            cv::namedWindow(windowName); // Create a window
+            cv::imshow(windowName, image); // Show our image inside the created window.
+            cv::waitKey(0); // Wait for any keystroke in the window
+            cv::destroyWindow(windowName); //destroy the created window
+        }
 };
 
-std::string NortheasternEmergency::apiKey = "AIzaSyAVzi2oft7sKVPwi75u-gat3_uk-cwsEB8"; // Default set to Tyler's API Key
+/**
+ * @def set to Tyler's API Key
+ */
+std::string NortheasternEmergency::apiKey = "AIzaSyAVzi2oft7sKVPwi75u-gat3_uk-cwsEB8"; 
 
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main()
 {
     // Replace path with path to your .csv file

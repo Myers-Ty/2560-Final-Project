@@ -103,8 +103,8 @@ class NortheasternEmergency
         {
             // Construct the URL for the Directions API
             std::string polyUrl = "https://maps.googleapis.com/maps/api/directions/json?"
-                            "origin=" + origin + // Add NEU to address for accuracy
-                            "&destination=" + destination + // Add NEU to address for accuracy
+                            "origin=" + origin +
+                            "&destination=" + destination + 
                             "&mode=walking"
                             "&location=Northeastern+University" // limit search results to northeastern area
                             "&radius=3000" // Limit search radius to within 3km of Northeastern
@@ -179,9 +179,6 @@ class NortheasternEmergency
             return distance;
         }
 
-
-        
-
         void DeployOfficer(std::string emergencyLocation, std::vector<Officer> officers)
         {
             double shortestPath = std::numeric_limits<double>::max();
@@ -205,8 +202,8 @@ class NortheasternEmergency
             {
                 nearestOfficer->isAvailable = false;
                 std::cout<<"Deployed Officer ID: "<<nearestOfficer->ID<<" from "<<nearestOfficer->location<<" to "<<emergencyLocation<< " with distance " <<shortestPath<<" meters"<<std::endl;
+                ShortestPath(nearestOfficer->location, emergencyLocation);
             }
-            
             else
             {
                 std::cout<<"No available officers to deploy!"<<std::endl;
@@ -429,21 +426,31 @@ std::string NortheasternEmergency::apiKey = "AIzaSyAVzi2oft7sKVPwi75u-gat3_uk-cw
 
 int main()
 {
-    // Replace paths with paths to your .csv files
-    NortheasternEmergency emerg("PastEmergencies.csv", numOfficers);
-    
-    /*
+    // Replace path with path to your .csv file
+    int numberOfficers = 25;
+    NortheasternEmergency emerg("PastEmergencies.csv", numberOfficers);
+
+    std::string destination;
+    int typeOfEmergency;
     while (true)
     {
-        std::string location;
-        std::string location2;
-        std::cout << "Enter the origin: ";
-        std::getline(std::cin, location);
-        std::cout << "Enter the destination: ";
-        std::getline(std::cin, location2);
-        emerg.ShortestPath(location, location2);
+        std::cout << "Enter the destination of the emergency: ";
+        getline(std::cin, destination);
+        std::cout << "Enter the type of emergency: \n"
+                    "1. fire alarm \n"
+                    "2. fighting \n";
+        std::cin >> typeOfEmergency;
+        switch (typeOfEmergency)
+        {
+            case 1:
+                emerg.DeployOfficerAndEquipment(destination, "fire alarm");
+                break; 
+            case 2:
+                emerg.DeployOfficerAndEquipment(destination, "fighting");
+                break; 
+            default:
+                std::cout << "Please enter a valid emergency type.";
+        }
     }
-    emerg.ShortestPath("Ell Hall", "Snell Library");
-    */
     return 0;
 }

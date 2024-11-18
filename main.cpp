@@ -3,10 +3,11 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include <opencv2/core/core.hpp> // Install with Ubuntu
+#include <opencv4/opencv2/core/core.hpp> // Install with Ubuntu
 #include <opencv2/highgui/highgui.hpp>  // Install with Ubuntu  
 #include <nlohmann/json.hpp> // Install with Ubuntu
 #include <vector>
+#include <unordered_map>
 #include <fstream>
 
 class NortheasternEmergency
@@ -16,6 +17,68 @@ class NortheasternEmergency
         std::vector<std::string> NUPDLocations;
         int PastEmergencies[4] = {0,0,0,0}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
         int OfficersAllocated[5] = {1,1,1,1,1}; // each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
+
+        // Officer structure
+        struct Officer
+        {
+            std::string ID;
+            std::string location;
+            bool isAvailable;
+        };
+        std::vector<Officer> officers;
+
+        // Equipment structure
+        struct Equipment
+        {
+            std::string name;
+            int weight;
+            int importance;
+        };
+
+        // Unordered map of emergency and requisite equipment
+        std::unordered_map<std::string, std::vector<Equipment>> crimeEquipment =
+        {
+            {"fire alarm", {{"taser", 2, 0}, {"pepper spray", 1, 0}, {"fire extinguisher", 5, 6}, {"fire axe", 8, 5}}},
+            {"fighting", {{"taser", 2, 8}, {"pepper spray", 1, 5}, {"fire extinguisher", 5, 0}, {"fire axe", 8, 0}}}
+        };
+
+        // method to solve 01 knapsack problem and choose optimal eq.
+        std::vector<std::string> solveKnapsack(const std::vector<Equipment> &items, int maxWeight)
+        {
+            int n = items.size();
+            std::vector<std::vector<int>> dp(n+1, std::vector<int>(maxWeight+1, 0));// 2D vector -rprsnting. max. import. posbl. w/ first i items w/ weight lim. of w
+
+            for (int i = 1; i <= n; ++i) //Iterate over each item
+            {
+                for (int w = 1; w <= maxWeight; ++w) // Iterate over each weight limit
+                {
+                    if (items[i-1].weight <= maxWeight) // If item can fit in the knapsack with the current weight limit
+                    {
+                        dp[i][w] = std::max(dp[i-1][w], dp[i-1][w-items[i-1].weight]+items[i-1].importance); // Choose the maximum
+                    }
+
+                    else // If not, do not include
+                    {
+                        dp[i][w] = dp[i-1][w];
+                    }
+                }
+            }
+            // Go back to find chosen items
+            std::vector<std::string> chosenItems;
+            int w = maxWeight;
+            
+            // Go through dp table to find the items taht were included
+            for (int i = n; i>0 && w > 0; --i)
+            {
+                if (dp[i][w] != dp[i-1][w]) // If current != previous the item was included
+                {
+                    chosenItems.push_back(items[i-1].name); // Add item to list
+                    w -= items[i-1].weight; // Reduce remaining allowed weight
+                }
+            }
+            return chosenItems;
+        }
+
         // Used to encode the overivew polyline
         std::string urlEncode(const std::string &value) 
         {
@@ -73,6 +136,7 @@ class NortheasternEmergency
             }
             return urlEncode(polyline);
         }
+
         double getPolyLineDistance(std::string origin, std::string destination)
         {
             // Construct the URL for the Directions API
@@ -115,13 +179,7 @@ class NortheasternEmergency
             return distance;
         }
 
-        struct Officer
-        {
-            std::string ID;
-            std::string location;
-            bool isAvailable;
-        };
-        std::vector<Officer> officers;
+
         
 
         void DeployOfficer(std::string emergencyLocation, std::vector<Officer> officers)
@@ -192,7 +250,6 @@ class NortheasternEmergency
         }
 
         static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-        static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
             ((std::string*)userp)->append((char*)contents, size * nmemb);
             return size * nmemb;
         }
@@ -254,7 +311,8 @@ class NortheasternEmergency
                     // getline(file, Equipment, ','); // can just add rest of getline commands right inside this loop
                 }
             }
-            else {
+            else
+            {
                 std::cout << "File failed to open" << std::endl;
             }
         }
@@ -298,12 +356,28 @@ class NortheasternEmergency
             {
                 std::cout << "File failed to open" << std::endl;
             }
+        }
 
     public:
     NortheasternEmergency(std::string PathToCSV, int numOfficers)
     {
         ParseCSV(PathToCSV);
         DynamicOfficerAllocation(numOfficers);
+    }
+
+    void DeployOfficerAndEquipment(std::string location, std::string emergencyType)
+    {
+        std::cout<<"Emergency at: "<<location<<std::endl;
+        DeployOfficer(location, officers);
+
+        std::vector<Equipment> equipmentNeeded = crimeEquipment[emergencyType];
+        std::vector<std::string> optimalEquipment = solveKnapsack(equipmentNeeded, 15);
+
+        std::cout<<"Optimal equipment for "<<emergencyType<<std::endl;
+        for (const auto &item :optimalEquipment)
+        {
+            std::cout<<item<<std::endl;
+        }
     }
 
     void ShortestPath(std::string origin, std::string destination)
@@ -356,7 +430,8 @@ std::string NortheasternEmergency::apiKey = "AIzaSyAVzi2oft7sKVPwi75u-gat3_uk-cw
 int main()
 {
     // Replace paths with paths to your .csv files
-    NortheasternEmergency emerg("PastEmergencies.csv", "officers.csv");
+    NortheasternEmergency emerg("PastEmergencies.csv", numOfficers);
+    
     /*
     while (true)
     {

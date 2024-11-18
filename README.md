@@ -1,5 +1,3 @@
-This code is run in Ubuntu WSL, Windows, VS Code
-
 # Set Up:
     ### Windows:
         [Install Ubuntu WSL](https://learn.microsoft.com/en-us/windows/wsl/install).

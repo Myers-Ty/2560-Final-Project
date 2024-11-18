@@ -195,6 +195,11 @@ class NortheasternEmergency
          */
         double getPolyLineDistance(std::string origin, std::string destination)
         {
+            std::replace(origin.begin(), origin.end(), ' ', '+'); // replace all ' ' to '+'
+            std::replace(destination.begin(), destination.end(), ' ', '+'); // replace all ' ' to '+'
+
+            origin = autocompleteAddress(origin);
+            destination = autocompleteAddress(destination);
             // Construct the URL for the Directions API
             std::string polyUrl = "https://maps.googleapis.com/maps/api/directions/json?"
                             "origin=" + origin + // Add NEU to address for accuracy
@@ -223,7 +228,7 @@ class NortheasternEmergency
 
                 // Parse the JSON response to extract the polyline
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferPoly);
-                std::cout << readBufferPoly << std::endl;
+                //std::cout << readBufferPoly << std::endl;
                 if (!jsonResponse["routes"].empty()) {
                     polyline = jsonResponse["routes"][0]["overview_polyline"]["points"].get<std::string>();
                     distance = jsonResponse["routes"][0]["legs"][0]["distance"]["value"].get<double>();
@@ -235,12 +240,12 @@ class NortheasternEmergency
             return distance;
         }
 
-         /** 
+        /** 
          *  @brief Used to determine the officer closest to the emergency
          *  @param emergencyLocation: where the emergency occurs
          *  @retval None
          */
-        void DeployOfficer(std::string emergencyLocation)
+        int DeployOfficer(std::string emergencyLocation)
         {
             double shortestPath = std::numeric_limits<double>::max();
             Officer* nearestOfficer = nullptr;
@@ -249,6 +254,7 @@ class NortheasternEmergency
             {
                 if (officer.isAvailable)
                 {
+                    //std::cout << officer.ID << "\n";
                     double pathLength = getPolyLineDistance(officer.location, emergencyLocation);
 
                     if (pathLength < shortestPath)
@@ -264,11 +270,9 @@ class NortheasternEmergency
                 nearestOfficer->isAvailable = false;
                 std::cout<<"Deployed Officer ID: "<<nearestOfficer->ID<<" from "<<nearestOfficer->location<<" to "<<emergencyLocation<< " with distance " <<shortestPath<<" meters"<<std::endl;
                 ShortestPath(nearestOfficer->location, emergencyLocation);
+                return 1;
             }
-            else
-            {
-                std::cout<<"No available officers to deploy!"<<std::endl;
-            }
+            return 0;
         }  
         
         /** 
@@ -300,8 +304,8 @@ class NortheasternEmergency
                 curl_easy_cleanup(curlURL);
                 // Parse the JSON response to extract the polyline
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferURL);
-                std::cout << readBufferURL << std::endl; // Used for Debugging
-                std::cout << readBufferURL << std::endl; // Used for Debugging
+                //std::cout << readBufferURL << std::endl; // Used for Debugging
+                //std::cout << readBufferURL << std::endl; // Used for Debugging
                 if (!jsonResponse["predictions"].empty()) {
                     PlaceID = jsonResponse["predictions"][0]["description"].get<std::string>();
                 } else {
@@ -406,33 +410,20 @@ class NortheasternEmergency
             if (file.is_open())
             {
                 std::string line;
-                
-                while (getline(file, line))
+                std::string ID, location, isAvailableStr;
+                bool isAvailable;
+                getline(file, ID); // skips first line of titles
+                while (getline(file, ID, ','))
                 {
-                    std::stringstream ss(line);
-                    std::string ID, location, isAvailableStr;
-                    bool isAvailable;
-
-                    getline(ss, ID, ',');
-                    getline(ss, location, ',');
-                    getline(ss, isAvailableStr);
-
-                    if (isAvailableStr == "true")
-                    {
-                        isAvailable = true;
-                    }
-                    else
-                    {
-                        isAvailable = false;
-                    }
+                    getline(file, location, ',');
+                    getline(file, isAvailableStr);
 
                     Officer officer;
                     officer.ID = ID;
                     officer.location = location;
-                    officer.isAvailable = isAvailable;
+                    officer.isAvailable = true; // ALEX FIX
                     officers.push_back(officer);
                 }
-                file.close();
             }
 
             else
@@ -447,9 +438,10 @@ class NortheasternEmergency
          * @param PathToCSV: string file path to past emergency data
          * @param numOfficers: how many officers are currently on duty
          */
-        NortheasternEmergency(std::string PathToCSV, int numOfficers)
+        NortheasternEmergency(std::string PathToCSV, std::string PathToOfficersCSV, int numOfficers)
         {
             ParseCSV(PathToCSV);
+            ParseOfficersCSV(PathToOfficersCSV);
             DynamicOfficerAllocation(numOfficers);
         }
 
@@ -462,15 +454,22 @@ class NortheasternEmergency
         void DeployOfficerAndEquipment(std::string location, std::string emergencyType)
         {
             std::cout<<"Emergency at: "<<location<<std::endl;
-            DeployOfficer(location);
-
-            std::vector<Equipment> equipmentNeeded = crimeEquipment[emergencyType];
-            std::vector<std::string> optimalEquipment = solveKnapsack(equipmentNeeded, 15);
-
-            std::cout<<"Optimal equipment for "<<emergencyType<<std::endl;
-            for (const auto &item :optimalEquipment)
+            if (DeployOfficer(location) == 1)
             {
-                std::cout<<item<<std::endl;
+
+                std::vector<Equipment> equipmentNeeded = crimeEquipment[emergencyType];
+                std::vector<std::string> optimalEquipment = solveKnapsack(equipmentNeeded, 15);
+
+                std::cout<<"Optimal equipment for "<<emergencyType<<std::endl;
+                for (const auto &item :optimalEquipment)
+                {
+                    std::cout<<item<<std::endl;
+                }
+            }
+
+            else
+            {
+                std::cout<<"No available officers to deploy!"<<std::endl;
             }
         }
 
@@ -535,7 +534,7 @@ int main()
 {
     // Replace path with path to your .csv file
     int numberOfficers = 25;
-    NortheasternEmergency emerg("PastEmergencies.csv", numberOfficers);
+    NortheasternEmergency emerg("PastEmergencies.csv", "officers.csv", numberOfficers);
 
     std::string destination;
     int typeOfEmergency;

@@ -179,7 +179,6 @@ class NortheasternEmergency
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferPoly);
                 if (!jsonResponse["routes"].empty()) {
                     polyline = jsonResponse["routes"][0]["overview_polyline"]["points"].get<std::string>();
-                    std::cout << "polyline found" << std::endl; // Used for DEBUGGING
                 } else {
                     std::cerr << "No routes found." << std::endl;
                 }
@@ -232,7 +231,6 @@ class NortheasternEmergency
                 if (!jsonResponse["routes"].empty()) {
                     polyline = jsonResponse["routes"][0]["overview_polyline"]["points"].get<std::string>();
                     distance = jsonResponse["routes"][0]["legs"][0]["distance"]["value"].get<double>();
-                    std::cout << "polyline found" << std::endl; // Used for DEBUGGING
                 } else {
                     std::cerr << "No routes found." << std::endl;
                 }
@@ -310,7 +308,6 @@ class NortheasternEmergency
                     std::cerr << "No predictions found." << std::endl;
                 }
             }
-            std::cout << PlaceID << std::endl;
             std::replace(PlaceID.begin(), PlaceID.end(), ' ', '+'); // replace all ' ' to '+'
             return PlaceID;
         }
@@ -530,24 +527,24 @@ int main()
     NortheasternEmergency emerg("PastEmergencies.csv", "officers.csv", numberOfficers);
 
     std::string destination;
-    int typeOfEmergency;
+    int typeOfEmergency = 1;
     while (true)
     {
         // user interface
-        std::cout << "Enter the destination of the emergency: ";
+        std::cout << "Enter the destination of the emergency: \n";
         getline(std::cin, destination);
         std::cout << "Enter the type of emergency: \n"
-                    "1. fire alarm \n"
-                    "2. fighting \n"
-                    "3. theft \n"
-                    "4. alcohol overdose \n"
-                    "5. drug overdose \n"
-                    "6. acute non lethal injury \n"
-                    "7. potentially lethal injury \n"
-                    "8. exit \n";
+                "1. fire alarm \n"
+                "2. fighting \n"
+                "3. theft \n"
+                "4. alcohol overdose \n"
+                "5. drug overdose \n"
+                "6. acute non lethal injury \n"
+                "7. potentially lethal injury \n"
+                "8. exit \n";
         std::cin >> typeOfEmergency;
-        while(std::cin.fail()) {
-            std::cout << "Error please enter an integer" << std::endl;
+        while(std::cin.fail() || typeOfEmergency < 1 || typeOfEmergency > 8) {
+            std::cout << "Error please enter one of the integer options to select a valid emergency type. : \n";
             std::cin.clear();
             std::cin.ignore(256,'\n');
             std::cin >> typeOfEmergency;
@@ -578,7 +575,7 @@ int main()
             case 8:
                 return 0;
             default:
-                std::cout << "Please enter a valid emergency type.";
+                std::cout << "Please enter a valid emergency type. \n";
         }
     }
     return 0;

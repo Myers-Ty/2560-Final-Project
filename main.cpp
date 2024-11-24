@@ -544,7 +544,16 @@ int main()
                 "8. exit \n";
         std::cin >> typeOfEmergency;
         while(std::cin.fail() || typeOfEmergency < 1 || typeOfEmergency > 8) {
-            std::cout << "Error please enter one of the integer options to select a valid emergency type. : \n";
+            std::cout << "Enter the type of emergency: \n"
+                "1. fire alarm \n"
+                "2. fighting \n"
+                "3. theft \n"
+                "4. alcohol overdose \n"
+                "5. drug overdose \n"
+                "6. acute non lethal injury \n"
+                "7. potentially lethal injury \n"
+                "8. exit \n"
+                "Error please enter one of the options by their integer number\n";
             std::cin.clear();
             std::cin.ignore(256,'\n');
             std::cin >> typeOfEmergency;

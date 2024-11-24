@@ -168,6 +168,7 @@ class NortheasternEmergency
             curlPoly = curl_easy_init();
             
             if (curlPoly) {
+                // curl code is required and formats the data recieved from Google API into a parsable json
                 curl_easy_setopt(curlPoly, CURLOPT_URL, polyUrl.c_str());
                 curl_easy_setopt(curlPoly, CURLOPT_WRITEFUNCTION, WriteCallback);
                 curl_easy_setopt(curlPoly, CURLOPT_WRITEDATA, &readBufferPoly);
@@ -176,7 +177,6 @@ class NortheasternEmergency
                 curl_easy_cleanup(curlPoly);
                 // Parse the JSON response to extract the polyline
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferPoly);
-                // std::cout << readBufferPoly << std::endl; // Used for DEBUGGING
                 if (!jsonResponse["routes"].empty()) {
                     polyline = jsonResponse["routes"][0]["overview_polyline"]["points"].get<std::string>();
                     std::cout << "polyline found" << std::endl; // Used for DEBUGGING
@@ -546,6 +546,12 @@ int main()
                     "7. potentially lethal injury \n"
                     "8. exit \n";
         std::cin >> typeOfEmergency;
+        while(std::cin.fail()) {
+            std::cout << "Error please enter an integer" << std::endl;
+            std::cin.clear();
+            std::cin.ignore(256,'\n');
+            std::cin >> typeOfEmergency;
+        }
         switch (typeOfEmergency)
         {
             case 1:

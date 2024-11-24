@@ -219,6 +219,7 @@ class NortheasternEmergency
             double distance = 0;
             
             if (curlPoly) {
+                // curl code is required and formats the data recieved from Google API into a parsable json
                 curl_easy_setopt(curlPoly, CURLOPT_URL, polyUrl.c_str());
                 curl_easy_setopt(curlPoly, CURLOPT_WRITEFUNCTION, WriteCallback);
                 curl_easy_setopt(curlPoly, CURLOPT_WRITEDATA, &readBufferPoly);
@@ -228,7 +229,6 @@ class NortheasternEmergency
 
                 // Parse the JSON response to extract the polyline
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferPoly);
-                //std::cout << readBufferPoly << std::endl;
                 if (!jsonResponse["routes"].empty()) {
                     polyline = jsonResponse["routes"][0]["overview_polyline"]["points"].get<std::string>();
                     distance = jsonResponse["routes"][0]["legs"][0]["distance"]["value"].get<double>();
@@ -254,7 +254,6 @@ class NortheasternEmergency
             {
                 if (officer.isAvailable)
                 {
-                    //std::cout << officer.ID << "\n";
                     double pathLength = getPolyLineDistance(officer.location, emergencyLocation);
 
                     if (pathLength < shortestPath)
@@ -296,6 +295,7 @@ class NortheasternEmergency
             CURLcode resURL;
             curlURL = curl_easy_init();
             if (curlURL) {
+                // Parse the JSON response to extract the polyline
                 curl_easy_setopt(curlURL, CURLOPT_URL, autoURL.c_str());
                 curl_easy_setopt(curlURL, CURLOPT_WRITEFUNCTION, WriteCallback);
                 curl_easy_setopt(curlURL, CURLOPT_WRITEDATA, &readBufferURL);
@@ -304,15 +304,13 @@ class NortheasternEmergency
                 curl_easy_cleanup(curlURL);
                 // Parse the JSON response to extract the polyline
                 nlohmann::json jsonResponse = nlohmann::json::parse(readBufferURL);
-                //std::cout << readBufferURL << std::endl; // Used for Debugging
-                //std::cout << readBufferURL << std::endl; // Used for Debugging
                 if (!jsonResponse["predictions"].empty()) {
                     PlaceID = jsonResponse["predictions"][0]["description"].get<std::string>();
                 } else {
                     std::cerr << "No predictions found." << std::endl;
                 }
             }
-            std::cout << PlaceID << std::endl; // Used for DEBUGGING
+            std::cout << PlaceID << std::endl;
             std::replace(PlaceID.begin(), PlaceID.end(), ' ', '+'); // replace all ' ' to '+'
             return PlaceID;
         }
@@ -333,13 +331,13 @@ class NortheasternEmergency
          */
         void DynamicOfficerAllocation(int numOfficers)
         {
-
             /* The first location is where the officers are stationed
                The second location is the AED zone the station point is based upon
                Zone 1 ~ Columbus Place (Columbus South Sector)
                Zone 2 ~ Behrakis (West Campus Sector)
                Zone 3 ~ Curry (Academics Sector)
                Zone 4 ~ Marino (East Fenway Sector)
+               Zones are stored in the index 1 less than their number
             */
             numOfficers = numOfficers - 4; // Fair to assume at least 4 officers are always on duty due to size of our university so one officer is assigned per zone
             while (numOfficers > 0)
@@ -350,17 +348,18 @@ class NortheasternEmergency
                 {
                     worstZone++;
                 }
-                while (i < 4)
+                while (i < 4) // loop 4 times once for each zone
                 {
                     if (PastEmergencies[i] != 0) // prevent divide by 0
                     {
-                        if (OfficersAllocated[i]/PastEmergencies[i] < OfficersAllocated[worstZone]/PastEmergencies[worstZone])
+                        if (OfficersAllocated[i]/PastEmergencies[i] < OfficersAllocated[worstZone]/PastEmergencies[worstZone]) // if ratio worse then allocate officer
                         {
                             worstZone = i;
                         }
                     }
                     i++;
                 }
+                // allocate officer to zone and remove 1 from officers left to allocate
                 OfficersAllocated[worstZone]++;
                 numOfficers--;
             }
@@ -371,7 +370,7 @@ class NortheasternEmergency
          * @param PathToCSV: string file path to CSV location
          * @retval None
          */
-        void ParseCSV(std::string PathToCSV)
+        void ParsePastRecordsCSV(std::string PathToCSV)
         {
             std::ifstream file(PathToCSV); 
             
@@ -382,15 +381,8 @@ class NortheasternEmergency
 
                 while (getline(file, parse, ',')) 
                 {
-                    // std::cout << "Location:" << parse << " | "; 
-
-                    getline(file, parse, ',');
-                    // std::cout << "Emergency:" << parse << " | "  ;
-
                     getline(file, parse);
                     PastEmergencies[stoi(parse)-1]++;
-
-                    // getline(file, Equipment, ','); // can just add rest of getline commands right inside this loop
                 }
             }
             else
@@ -440,7 +432,7 @@ class NortheasternEmergency
          */
         NortheasternEmergency(std::string PathToCSV, std::string PathToOfficersCSV, int numOfficers)
         {
-            ParseCSV(PathToCSV);
+            ParsePastRecordsCSV(PathToCSV);
             ParseOfficersCSV(PathToOfficersCSV);
             DynamicOfficerAllocation(numOfficers);
         }
@@ -502,6 +494,7 @@ class NortheasternEmergency
             std::string readBuffer;
             curl = curl_easy_init();
             if(curl) {
+                // Parse the JSON response to extract the polyline
                 curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
@@ -540,11 +533,18 @@ int main()
     int typeOfEmergency;
     while (true)
     {
+        // user interface
         std::cout << "Enter the destination of the emergency: ";
         getline(std::cin, destination);
         std::cout << "Enter the type of emergency: \n"
                     "1. fire alarm \n"
-                    "2. fighting \n";
+                    "2. fighting \n"
+                    "3. theft \n"
+                    "4. alcohol overdose \n"
+                    "5. drug overdose \n"
+                    "6. acute non lethal injury \n"
+                    "7. potentially lethal injury \n"
+                    "8. exit \n";
         std::cin >> typeOfEmergency;
         switch (typeOfEmergency)
         {
@@ -554,6 +554,23 @@ int main()
             case 2:
                 emerg.DeployOfficerAndEquipment(destination, "fighting");
                 break; 
+            case 3:
+                emerg.DeployOfficerAndEquipment(destination, "theft");
+                break; 
+            case 4:
+                emerg.DeployOfficerAndEquipment(destination, "alcohol overdose");
+                break; 
+            case 5:
+                emerg.DeployOfficerAndEquipment(destination, "drug overdose");
+                break; 
+            case 6:
+                emerg.DeployOfficerAndEquipment(destination, "acute non lethal injury");
+                break; 
+            case 7:
+                emerg.DeployOfficerAndEquipment(destination, "potentially lethal injury");
+                break; 
+            case 8:
+                return 0;
             default:
                 std::cout << "Please enter a valid emergency type.";
         }

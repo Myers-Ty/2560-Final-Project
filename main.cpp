@@ -449,7 +449,7 @@ class NortheasternEmergency
                 std::vector<Equipment> equipmentNeeded = crimeEquipment[emergencyType];
                 std::vector<std::string> optimalEquipment = solveKnapsack(equipmentNeeded, 15);
 
-                std::cout<<"Optimal equipment for "<<emergencyType<<std::endl;
+                std::cout<<"Optimal equipment that officer should carry for "<<emergencyType<<":"<<std::endl;
                 for (const auto &item :optimalEquipment)
                 {
                     std::cout<<item<<std::endl;
@@ -586,6 +586,8 @@ int main()
             default:
                 std::cout << "Please enter a valid emergency type. \n";
         }
+        std::cin.clear();
+        std::cin.ignore(256,'\n');
     }
     return 0;
 }

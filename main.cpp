@@ -27,19 +27,18 @@ class NortheasternEmergency
         static std::string apiKey;
 
         /**
-         * @brief each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
+         * @brief each index represents repesctive zone with index 0 being zone 1 ... index 3 being zone 4
          */
         int PastEmergencies[4] = {0,0,0,0};
 
         /**
-         * @brief each index represents repesctive zone with index 0 being zone 1 ... index 4 being zone 5
+         * @brief each index represents repesctive zone with index 0 being zone 1 ... index 3 being zone 4
          */
-        int OfficersAllocated[5] = {1,1,1,1,1};
+        int OfficersAllocated[4] = {1,1,1,1};
 
         /**
          * @brief Officer structure that makes up every officer on campus
          * @param ID: officer's badge #
-         * @param deployedZone: point where officer is dynamically allocated to stay
          * @param isAvailable: true = currently at location && false = currently on response to emergency
          */
         struct Officer
@@ -60,6 +59,11 @@ class NortheasternEmergency
         std::vector<Officer> zone2_officers;
         std::vector<Officer> zone3_officers;
         std::vector<Officer> zone4_officers;
+
+        /**
+         * @brief Vector of vectors holding officers assigned to each zone.
+         */
+        std::vector<std::vector<Officer>> officerZones = {zone1_officers, zone2_officers, zone3_officers, zone4_officers};
 
        /**
         * @brief Equipment structure that makes up every equipment available on campus
@@ -94,7 +98,8 @@ class NortheasternEmergency
         std::vector<std::string> solveKnapsack(const std::vector<Equipment> &items, int maxWeight)
         {
             int n = items.size();
-            std::vector<std::vector<int>> dp(n+1, std::vector<int>(maxWeight+1, 0));// 2D vector -rprsnting. max. import. posbl. w/ first i items w/ weight lim. of w
+            // 2D vector representing maximum importance possible with the first "i" items considering a weight limit of "w"
+            std::vector<std::vector<int>> dp(n+1, std::vector<int>(maxWeight+1, 0));
 
             for (int i = 1; i <= n; ++i) //Iterate over each item
             {
@@ -115,7 +120,7 @@ class NortheasternEmergency
             std::vector<std::string> chosenItems;
             int w = maxWeight;
             
-            // Go through dp table to find the items taht were included
+            // Go through dp table to find the items that were included
             for (int i = n; i>0 && w > 0; --i)
             {
                 if (dp[i][w] != dp[i-1][w]) // If current != previous the item was included
@@ -246,38 +251,65 @@ class NortheasternEmergency
         }
 
         /** 
-         *  @brief Used to determine the officer closest to the emergency
+         *  @brief Used to select the neareast available officer closest to a emergency based on zone
          *  @param emergencyLocation: where the emergency occurs
          *  @retval None
          */
-        int DeployOfficer(std::string emergencyLocation)
+        void DeployOfficerToIncident(std::string emergencyLocation)
         {
             double shortestPath = std::numeric_limits<double>::max();
-            Officer* nearestOfficer = nullptr;
+            int selectedZone = -1;
+            size_t selectedIndex = -1;
 
-            for (auto& officer : officers)
+            std::vector<std::tuple<int, std::string, double>> deploymentZones;
+            std::vector<std::string> zoneNames = {"Columbus Place and Alumni Center", 
+                                                "Behrakis Health Sciences Center", 
+                                                "Curry Student Center", 
+                                                "Marino Recreation Center"};
+
+            for (size_t i = 0; i < zoneNames.size(); ++i)
             {
-                if (officer.isAvailable)
-                {
-                    double pathLength = getPolyLineDistance(officer.location, emergencyLocation);
+                double distance = getPolyLineDistance(zoneNames[i], emergencyLocation);
+                deploymentZones.push_back(std::make_tuple(i, zoneNames[i], distance));
+            }
 
-                    if (pathLength < shortestPath)
+            std::sort(deploymentZones.begin(), deploymentZones.end(), 
+                        [](const std::tuple<int, std::string, double> &a, const std::tuple<int, std::string, double> &b){
+                        return std::get<2>(a) < std::get<2>(b);
+                    });
+
+            for (const auto &[zoneIndex, zoneName, distance] : deploymentZones)
+            {
+                for (size_t officerIndex = 0; officerIndex < officerZones[zoneIndex].size(); ++officerIndex)
+                {
+                    Officer &officer = officerZones[zoneIndex][officerIndex];
+                    
+                    if (officer.isAvailable)
                     {
-                        shortestPath = pathLength;
-                        nearestOfficer = &officer;
+                        selectedZone = zoneIndex;
+                        selectedIndex = officerIndex;
+                        shortestPath = distance;
+                        break;
                     }
                 }
+
+                if (selectedZone != -1) break;
             }
 
-            if (nearestOfficer != nullptr)
+            if (selectedZone != -1 && selectedIndex != -1)
             {
-                nearestOfficer->isAvailable = false;
-                std::cout<<"Deployed Officer ID: "<<nearestOfficer->ID<<" from "<<nearestOfficer->location<<" to "<<emergencyLocation<< " with distance " <<shortestPath<<" meters"<<std::endl;
-                ShortestPath(nearestOfficer->location, emergencyLocation);
-                return 1;
+                Officer &selectedOfficer = officerZones[selectedZone][selectedIndex];
+                selectedOfficer.isAvailable = false;
+
+                std::cout << "Deployed officer with badge ID " << selectedOfficer.ID
+                        << " from " << zoneNames[selectedZone] << " to " << emergencyLocation
+                        << " with distance " << shortestPath << " meters." << std::endl;
             }
-            return 0;
-        }  
+            else
+            {
+                std::cout << "Critical campus-wide emergency present! No available officers to deploy!" << std::endl;
+            }
+        }
         
         /** 
          *  @brief Used for QOL for user, allowing Google API to guess the address
@@ -395,6 +427,7 @@ class NortheasternEmergency
             }
         }
         
+
         /**
         * @brief takes in a CSV file and parses data into usable format by the class
         * @param PathToOfficersCSV: string file path to CSV location
@@ -432,7 +465,11 @@ class NortheasternEmergency
                         case 4:
                             zone4_officers.push_back(officer);                    
                             break;
-                    }        
+                    }
+                    officerZones[0] = zone1_officers;
+                    officerZones[1] = zone2_officers;
+                    officerZones[2] = zone3_officers;
+                    officerZones[3] = zone4_officers;        
                 }
             }
             else
@@ -463,7 +500,7 @@ class NortheasternEmergency
         void DeployOfficerAndEquipment(std::string location, std::string emergencyType)
         {
             std::cout<<"Emergency at: "<<location<<std::endl;
-            if (DeployOfficer(location) == 1)
+            if (DeployOfficerToIncident(location) == 1)
             {
 
                 std::vector<Equipment> equipmentNeeded = crimeEquipment[emergencyType];

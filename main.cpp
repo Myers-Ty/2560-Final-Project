@@ -24,9 +24,6 @@ class NortheasternEmergency
         /**
          * @brief gives permission to access Google API
          */
-        /**
-         * @brief gives permission to access Google API
-         */
         static std::string apiKey;
 
         /**
@@ -265,9 +262,9 @@ class NortheasternEmergency
         /** 
          *  @brief Used to select the neareast available officer closest to a emergency based on zone
          *  @param emergencyLocation: where the emergency occurs
-         *  @retval None
+         *  @retval pair<int, std::string>
          */
-        int DeployOfficerToIncident(std::string emergencyLocation)
+        std::pair<int, std::string> DeployOfficerToIncident(std::string emergencyLocation)
         {
             // Initialize variables to track relevant info
             double shortestPath = std::numeric_limits<double>::max();
@@ -326,12 +323,12 @@ class NortheasternEmergency
                 std::cout << "Deployed officer with badge ID " << selectedOfficer.ID
                         << " from " << zoneNames[selectedZone] << " to " << emergencyLocation
                         << " with distance " << shortestPath << " meters." << std::endl;
-                return 1; // Returning 1 indicates success
+                return {1, zoneNames[selectedZone]}; // Returning 1 indicates success
             }
             else // No available officers found
             {
                 std::cout << "Critical campus-wide emergency present! No available officers to deploy!" << std::endl;
-                return 0; // Returning 0 indicates failure.
+                return {0, ""}; // Returning 0 indicates failure.
             }
         }
         
@@ -472,7 +469,6 @@ class NortheasternEmergency
                     Officer officer;
                     officer.ID = ID;
                     officer.isAvailable = true;
-                    std::cout<<deployedZone<<std::endl;
                     try 
                     {
                         int zone = std::stoi(deployedZone);
@@ -537,7 +533,8 @@ class NortheasternEmergency
         void DeployOfficerAndEquipment(std::string location, std::string emergencyType)
         {
             std::cout << "Emergency at: " << location << std::endl;
-            if (DeployOfficerToIncident(location) == 1) // If some officer is present
+            auto [status, origin] = DeployOfficerToIncident(location);
+            if ( status == 1) // If some officer is present
             {
                 std::vector<Equipment> equipmentNeeded = incidentEquipment[emergencyType];
                 std::vector<std::string> optimalEquipment = solveKnapsack(equipmentNeeded, 15);
@@ -558,11 +555,13 @@ class NortheasternEmergency
                             if (equipment.name == item) // Decrement the available quantity of the chosen equipments by 1
                             {
                                 equipment.quantity -= 1;
+                                ShortestPath(origin, location); // Display route
                                 break;
                             }
                         }
                     }
                 }
+            ShortestPath(origin, location);
             }
             else // If no officers are available
             {
@@ -698,4 +697,4 @@ int main()
         std::cin.ignore(256,'\n');
     }
     return 0;
-}
+} 

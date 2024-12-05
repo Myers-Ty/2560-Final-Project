@@ -24,6 +24,9 @@ class NortheasternEmergency
         /**
          * @brief gives permission to access Google API
          */
+        /**
+         * @brief gives permission to access Google API
+         */
         static std::string apiKey;
 
         /**
@@ -622,9 +625,9 @@ class NortheasternEmergency
 std::string NortheasternEmergency::apiKey = "AIzaSyAVzi2oft7sKVPwi75u-gat3_uk-cwsEB8"; 
 
 /**
-* @brief  The application entry point.
-* @retval int
-*/
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main()
 {
     // Replace path with path to your .csv file
@@ -636,7 +639,7 @@ int main()
     while (true)
     {
         // user interface
-        std::cout << "Enter the location of the emergency: \n";
+        std::cout << "Enter the destination of the emergency: \n";
         getline(std::cin, destination);
         std::cout << "Enter the type of emergency: \n"
                 "1. fire alarm \n"

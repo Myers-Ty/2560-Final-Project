@@ -1,7 +1,267 @@
-Location,Emergency,Stationed Zone
-Snell Library,Theft,1
-Davenport A,Fire Alarm,2
-Stetson West,Suspicious Behaviour,2
-Curry,Choking,3
-Stetson West,Temp,1
-Snell Engineering,Temp,4
+Emergency,Stationed Zone
+fire alarm,4
+acute non lethal injury,2
+theft,3
+acute non lethal injury,1
+fire alarm,2
+alcohol overdose,2
+fighting,1
+fire alarm,1
+fighting,1
+fire alarm,2
+theft,1
+fire alarm,4
+theft,1
+fire alarm,1
+fighting,1
+fire alarm,1
+fire alarm,4
+theft,2
+fire alarm,2
+fire alarm,2
+fire alarm,3
+potentially lethal injury,2
+fire alarm,2
+fire alarm,3
+acute non lethal injury,2
+fire alarm,1
+potentially lethal injury,4
+acute non lethal injury,2
+theft,3
+fighting,3
+fighting,1
+theft,4
+fire alarm,3
+potentially lethal injury,3
+fire alarm,3
+fire alarm,4
+theft,3
+theft,4
+potentially lethal injury,2
+fire alarm,1
+fire alarm,2
+fire alarm,3
+fire alarm,1
+drug overdose,1
+fire alarm,2
+fire alarm,2
+alcohol overdose,4
+potentially lethal injury,3
+drug overdose,1
+alcohol overdose,2
+theft,1
+alcohol overdose,3
+alcohol overdose,4
+acute non lethal injury,2
+alcohol overdose,1
+acute non lethal injury,2
+alcohol overdose,3
+drug overdose,2
+theft,1
+fighting,4
+theft,2
+drug overdose,2
+acute non lethal injury,4
+theft,4
+drug overdose,3
+theft,2
+drug overdose,1
+fire alarm,2
+alcohol overdose,2
+theft,2
+fire alarm,1
+drug overdose,3
+fighting,2
+theft,2
+acute non lethal injury,1
+fighting,4
+acute non lethal injury,4
+theft,3
+theft,2
+fighting,1
+fire alarm,1
+alcohol overdose,2
+acute non lethal injury,1
+acute non lethal injury,2
+fire alarm,2
+acute non lethal injury,3
+fire alarm,1
+drug overdose,2
+theft,2
+theft,1
+fire alarm,4
+theft,3
+fire alarm,1
+acute non lethal injury,2
+theft,2
+theft,3
+fighting,4
+fire alarm,4
+potentially lethal injury,1
+theft,3
+fire alarm,3
+drug overdose,4
+theft,1
+acute non lethal injury,3
+drug overdose,3
+alcohol overdose,2
+fire alarm,3
+theft,3
+fire alarm,4
+theft,3
+alcohol overdose,3
+theft,1
+acute non lethal injury,3
+alcohol overdose,4
+theft,3
+alcohol overdose,3
+fire alarm,4
+fire alarm,1
+fighting,2
+alcohol overdose,4
+alcohol overdose,3
+fighting,1
+acute non lethal injury,1
+fighting,1
+fire alarm,4
+fighting,1
+fire alarm,4
+fire alarm,4
+alcohol overdose,1
+theft,2
+fire alarm,2
+potentially lethal injury,1
+fire alarm,1
+alcohol overdose,1
+theft,4
+fire alarm,3
+fighting,3
+fire alarm,2
+acute non lethal injury,3
+acute non lethal injury,1
+fighting,1
+fighting,2
+theft,3
+theft,2
+theft,3
+drug overdose,2
+fire alarm,2
+fire alarm,2
+alcohol overdose,3
+fire alarm,4
+acute non lethal injury,3
+fire alarm,2
+fire alarm,1
+theft,3
+acute non lethal injury,1
+fire alarm,3
+drug overdose,1
+theft,3
+fire alarm,3
+alcohol overdose,3
+theft,2
+drug overdose,1
+alcohol overdose,1
+fighting,3
+fire alarm,3
+theft,3
+alcohol overdose,4
+alcohol overdose,1
+theft,3
+alcohol overdose,1
+acute non lethal injury,3
+alcohol overdose,1
+fire alarm,1
+fire alarm,1
+fire alarm,3
+fire alarm,3
+fire alarm,2
+theft,3
+theft,1
+theft,2
+fire alarm,2
+theft,1
+acute non lethal injury,2
+fire alarm,2
+fire alarm,4
+fire alarm,2
+fire alarm,3
+fire alarm,1
+fire alarm,1
+alcohol overdose,2
+alcohol overdose,3
+acute non lethal injury,1
+fire alarm,1
+fire alarm,1
+fire alarm,4
+acute non lethal injury,2
+fire alarm,3
+fire alarm,2
+fire alarm,3
+drug overdose,2
+theft,4
+alcohol overdose,2
+alcohol overdose,2
+theft,2
+fighting,3
+alcohol overdose,3
+potentially lethal injury,3
+fire alarm,2
+theft,3
+alcohol overdose,4
+fire alarm,2
+potentially lethal injury,3
+alcohol overdose,2
+acute non lethal injury,2
+alcohol overdose,2
+alcohol overdose,1
+fire alarm,3
+theft,3
+fire alarm,3
+fire alarm,3
+theft,1
+fire alarm,1
+theft,1
+fighting,3
+theft,4
+alcohol overdose,3
+fire alarm,4
+fighting,4
+theft,4
+alcohol overdose,2
+fire alarm,1
+fire alarm,1
+fire alarm,3
+fire alarm,4
+fire alarm,4
+fire alarm,2
+alcohol overdose,2
+fire alarm,3
+fire alarm,3
+alcohol overdose,3
+alcohol overdose,1
+theft,3
+theft,1
+theft,3
+theft,1
+fire alarm,1
+theft,2
+alcohol overdose,1
+fire alarm,2
+theft,4
+drug overdose,1
+theft,1
+alcohol overdose,1
+potentially lethal injury,2
+fire alarm,2
+fire alarm,3
+fire alarm,2
+theft,2
+theft,3
+fire alarm,4
+acute non lethal injury,3
+acute non lethal injury,4
+fighting,1
+drug overdose,1
+theft,1
+theft,2
